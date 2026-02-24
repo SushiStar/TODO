@@ -1,9 +1,11 @@
 import SwiftUI
+import Combine
 
 struct ContentView: View {
     @Environment(TaskViewModel.self) private var viewModel
     @State private var showingAddTask = false
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
+    @State private var today = Calendar.current.startOfDay(for: Date())
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -76,20 +78,12 @@ struct ContentView: View {
                 }
             }
         }
-        .task {
-            while !Task.isCancelled {
-                let now = Date()
-                guard let nextMidnight = Calendar.current.nextDate(
-                    after: now,
-                    matching: DateComponents(hour: 0, minute: 0, second: 0),
-                    matchingPolicy: .nextTime
-                ) else { break }
-                let interval = nextMidnight.timeIntervalSince(now)
-                try? await Task.sleep(for: .seconds(interval))
-                guard !Task.isCancelled else { break }
-                viewModel.performCarryoverIfNeeded()
-                selectedDate = Calendar.current.startOfDay(for: Date())
-            }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+            let newToday = Calendar.current.startOfDay(for: Date())
+            guard newToday != today else { return }
+            today = newToday
+            viewModel.performCarryoverIfNeeded()
+            selectedDate = newToday
         }
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(date: selectedDate)
