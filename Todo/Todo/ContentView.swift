@@ -76,6 +76,21 @@ struct ContentView: View {
                 }
             }
         }
+        .task {
+            while !Task.isCancelled {
+                let now = Date()
+                guard let nextMidnight = Calendar.current.nextDate(
+                    after: now,
+                    matching: DateComponents(hour: 0, minute: 0, second: 0),
+                    matchingPolicy: .nextTime
+                ) else { break }
+                let interval = nextMidnight.timeIntervalSince(now)
+                try? await Task.sleep(for: .seconds(interval))
+                guard !Task.isCancelled else { break }
+                viewModel.performCarryoverIfNeeded()
+                selectedDate = Calendar.current.startOfDay(for: Date())
+            }
+        }
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(date: selectedDate)
                 .environment(viewModel)

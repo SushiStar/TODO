@@ -23,9 +23,6 @@ final class TaskViewModel {
             store.tasks[i].createdDate = today
             store.tasks[i].isCarriedOver = true
         }
-        store.tasks.removeAll {
-            $0.isCompleted && !Calendar.current.isDateInToday($0.createdDate)
-        }
         store.lastLaunchDate = Date()
         StorageManager.shared.save(store)
     }
