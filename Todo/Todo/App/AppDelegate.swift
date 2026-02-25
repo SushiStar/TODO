@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         panel.level = .floating
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.collectionBehavior = [.fullScreenNone]
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
         panel.titlebarAppearsTransparent = true
@@ -33,6 +33,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.makeKeyAndOrderFront(nil)
 
         self.window = panel
+
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(activeSpaceDidChange),
+            name: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc func activeSpaceDidChange() {
+        guard let panel = window, !panel.isOnActiveSpace else { return }
+        panel.orderFront(nil)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
